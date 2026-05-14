@@ -19,6 +19,16 @@ def retrieve_policy(file_path: str) -> list[dict]:
     """
     Load a .txt policy file and return a list of numbered clause dicts.
     Each dict has: section, heading, text.
+    
+    Args:
+        file_path (str): The path to the text file containing the policy.
+        
+    Returns:
+        list[dict]: A list of dictionaries representing clauses, each containing 
+                    'section', 'heading', and 'text' keys.
+                    
+    Raises:
+        FileNotFoundError: If the policy file does not exist.
     """
     try:
         with open(file_path, encoding="utf-8") as f:
@@ -77,6 +87,15 @@ def summarize_policy(clauses: list[dict]) -> str:
     """
     Produce a clause-complete summary from structured policy clauses.
     Enforces all mandatory clauses are present and obligations are unaltered.
+    
+    Args:
+        clauses (list[dict]): A list of clause dictionaries extracted from the policy.
+        
+    Returns:
+        str: A formatted summary string containing all processed clauses.
+        
+    Raises:
+        MissingClauseError: If any mandatory clauses are missing from the input clauses.
     """
     found_sections = {c["section"] for c in clauses}
     missing = [s for s in MANDATORY_CLAUSES if s not in found_sections]
@@ -133,6 +152,12 @@ def summarize_policy(clauses: list[dict]) -> str:
 
 
 def main():
+    """
+    Main entry point for the policy summariser script.
+    
+    Parses command-line arguments, retrieves the policy clauses, generates a 
+    compliant summary, and writes the output to a specified file.
+    """
     parser = argparse.ArgumentParser(description="UC-0B Policy Summariser")
     parser.add_argument("--input",  required=True, help="Path to .txt policy file")
     parser.add_argument("--output", required=True, help="Path to write summary .txt")
