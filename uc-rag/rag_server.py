@@ -38,6 +38,12 @@ _collection = None
 
 
 def get_embedder():
+    """
+    Initialize and return the sentence embedder singleton.
+    
+    Returns:
+        SentenceTransformer: The loaded sentence embedding model.
+    """
     global _embedder
     if _embedder is None:
         try:
@@ -52,6 +58,15 @@ def get_embedder():
 
 
 def get_collection(db_path: str = DB_PATH):
+    """
+    Initialize and return the ChromaDB collection singleton.
+    
+    Args:
+        db_path (str, optional): The path to the ChromaDB directory. Defaults to DB_PATH.
+        
+    Returns:
+        Collection: The retrieved ChromaDB collection, or None if it cannot be accessed.
+    """
     global _client, _collection
     if _collection is None:
         try:
@@ -70,7 +85,15 @@ def get_collection(db_path: str = DB_PATH):
 
 # ── SKILL: chunk_documents ────────────────────────────────────────────────────
 def _split_sentences(text: str) -> list[str]:
-    """Split text on sentence boundaries using regex — no NLTK required."""
+    """
+    Split text on sentence boundaries using regex — no NLTK required.
+    
+    Args:
+        text (str): The raw text to split.
+        
+    Returns:
+        list[str]: A list of extracted sentences.
+    """
     sentences = re.split(r'(?<=[.!?])\s+', text.strip())
     return [s.strip() for s in sentences if s.strip()]
 
@@ -79,6 +102,13 @@ def _chunk_text(text: str, max_tokens: int = MAX_TOKENS) -> list[str]:
     """
     Accumulate sentences into chunks up to max_tokens (approx. words).
     Never splits mid-sentence — satisfies enforcement rule 1.
+    
+    Args:
+        text (str): The full text to be chunked.
+        max_tokens (int, optional): The maximum number of words per chunk. Defaults to MAX_TOKENS.
+        
+    Returns:
+        list[str]: A list of text chunks.
     """
     sentences = _split_sentences(text)
     chunks, current, count = [], [], 0
@@ -100,6 +130,12 @@ def chunk_documents(docs_dir: str = DOCS_DIR) -> list[dict]:
     Load all .txt policy files from docs_dir.
     Return list of {doc_name, chunk_index, text, id}.
     Addresses failure mode 1: sentence-aware chunking prevents clause splitting.
+    
+    Args:
+        docs_dir (str, optional): The directory containing policy documents. Defaults to DOCS_DIR.
+        
+    Returns:
+        list[dict]: A list of dictionary objects representing document chunks.
     """
     if not os.path.isdir(docs_dir):
         raise FileNotFoundError(f"Policy documents directory not found: {docs_dir}")
@@ -135,7 +171,13 @@ def chunk_documents(docs_dir: str = DOCS_DIR) -> list[dict]:
 
 # ── INDEX BUILDER ─────────────────────────────────────────────────────────────
 def build_index(docs_dir: str = DOCS_DIR, db_path: str = DB_PATH):
-    """Embed all chunks and store in ChromaDB."""
+    """
+    Embed all chunks and store in ChromaDB.
+    
+    Args:
+        docs_dir (str, optional): The directory containing policy text files. Defaults to DOCS_DIR.
+        db_path (str, optional): The path to store the ChromaDB index. Defaults to DB_PATH.
+    """
     global _client, _collection
     import chromadb
 
@@ -176,6 +218,17 @@ def retrieve_and_answer(
     - Chunks are sentence-aware (build_index uses chunk_documents)
     - Metadata filter separates docs (addresses wrong retrieval)
     - Prompt grounds answer to retrieved context only
+    
+    Args:
+        query (str): The user query.
+        collection: The ChromaDB collection to query against. Defaults to None.
+        embedder: The embedding model to encode the query. Defaults to None.
+        llm_call: The callable function to query the LLM. Defaults to None.
+        top_k (int, optional): The number of chunks to retrieve. Defaults to TOP_K.
+        threshold (float, optional): The minimum similarity threshold for chunks. Defaults to THRESHOLD.
+        
+    Returns:
+        dict: A dictionary containing the LLM 'answer', 'cited_chunks', and a 'refused' boolean.
     """
     if collection is None:
         collection = get_collection()
@@ -276,6 +329,14 @@ def naive_query(query: str, docs_dir: str = DOCS_DIR, llm_call=None) -> str:
     """
     Load all documents into context without retrieval.
     Run this first to observe failure modes before applying RAG.
+    
+    Args:
+        query (str): The user query.
+        docs_dir (str, optional): The directory containing the documents. Defaults to DOCS_DIR.
+        llm_call: The callable LLM function. Defaults to None.
+        
+    Returns:
+        str: The LLM's answer based on the full raw context of all documents.
     """
     all_text = []
     for fname in sorted(os.listdir(docs_dir)):
@@ -296,12 +357,27 @@ def naive_query(query: str, docs_dir: str = DOCS_DIR, llm_call=None) -> str:
 
 # ── PUBLIC INTERFACE (called by UC-MCP) ───────────────────────────────────────
 def query(question: str, llm_call=None) -> dict:
-    """Public interface for UC-MCP. Returns {answer, cited_chunks, refused}."""
+    """
+    Public interface for UC-MCP. 
+    
+    Args:
+        question (str): The user query.
+        llm_call: The callable LLM function. Defaults to None.
+        
+    Returns:
+        dict: A dictionary containing the answer, cited_chunks, and refused status.
+    """
     return retrieve_and_answer(question, llm_call=llm_call)
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 def main():
+    """
+    Main entry point for the RAG server CLI.
+    
+    Parses command-line arguments to either build the document index 
+    or run a query (naive or standard retrieval) against the RAG system.
+    """
     parser = argparse.ArgumentParser(description="UC-RAG RAG Server")
     parser.add_argument("--build-index", action="store_true",
                         help="Build ChromaDB index from policy documents")

@@ -59,9 +59,15 @@ TOOL_DEFINITION = {
 # ── SKILL: query_policy_documents ─────────────────────────────────────────────
 def query_policy_documents(question: str) -> dict:
     """
-    Call the RAG server with the question.
-    Return MCP content format: {"content": [...], "isError": bool}
-
+    Call the RAG server with the provided question to query policy documents.
+    
+    Args:
+        question (str): The user's question about CMC policy documents.
+        
+    Returns:
+        dict: A dictionary conforming to the MCP content format, containing 
+              a 'content' array and an 'isError' boolean flag.
+              
     Enforcement:
     - Empty/missing question → isError: True (never reach RAG)
     - RAG refused (no chunks above threshold) → isError: True
@@ -105,10 +111,31 @@ def query_policy_documents(question: str) -> dict:
 
 # ── JSON-RPC HELPERS ──────────────────────────────────────────────────────────
 def _jsonrpc_result(req_id, result: dict) -> dict:
+    """
+    Construct a successful JSON-RPC 2.0 result response.
+    
+    Args:
+        req_id: The ID of the original request.
+        result (dict): The result data to include in the response.
+        
+    Returns:
+        dict: A properly formatted JSON-RPC success response dictionary.
+    """
     return {"jsonrpc": "2.0", "id": req_id, "result": result}
 
 
 def _jsonrpc_error(req_id, code: int, message: str) -> dict:
+    """
+    Construct a JSON-RPC 2.0 error response.
+    
+    Args:
+        req_id: The ID of the original request.
+        code (int): The JSON-RPC error code.
+        message (str): The error message.
+        
+    Returns:
+        dict: A properly formatted JSON-RPC error response dictionary.
+    """
     return {
         "jsonrpc": "2.0",
         "id": req_id,
@@ -124,6 +151,12 @@ class MCPHandler(BaseHTTPRequestHandler):
     """
 
     def do_POST(self):
+        """
+        Handle incoming HTTP POST requests containing JSON-RPC payloads.
+        
+        Parses the JSON payload, dispatches to the requested method, and 
+        returns the appropriate JSON-RPC response via HTTP 200.
+        """
         # Read body
         length = int(self.headers.get("Content-Length", 0))
         raw    = self.rfile.read(length)
@@ -168,7 +201,12 @@ class MCPHandler(BaseHTTPRequestHandler):
         self._send(response)
 
     def _send(self, response: dict):
-        """Send JSON-RPC response with HTTP 200."""
+        """
+        Send the finalized JSON-RPC response with an HTTP 200 status code.
+        
+        Args:
+            response (dict): The complete JSON-RPC response dictionary to serialize and send.
+        """
         body = json.dumps(response).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type",   "application/json")
@@ -177,11 +215,24 @@ class MCPHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, format, *args):
+        """
+        Override the default HTTP server logging to use a custom prefix format.
+        
+        Args:
+            format: The log message format string.
+            *args: Additional arguments to format.
+        """
         print(f"[mcp_server] {args[0]} {args[1]}")
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 def main():
+    """
+    Main entry point for the MCP server.
+    
+    Parses command-line arguments, checks for a valid RAG index, and 
+    starts the HTTP server on the specified port to listen for requests.
+    """
     parser = argparse.ArgumentParser(description="UC-MCP Plain HTTP MCP Server")
     parser.add_argument("--port", type=int, default=8765,
                         help="Port to listen on (default: 8765)")
