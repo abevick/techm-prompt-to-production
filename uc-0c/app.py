@@ -23,6 +23,18 @@ def load_dataset(file_path: str) -> tuple[list[dict], list[dict]]:
     """
     Reads ward_budget.csv, validates columns, and reports null actual_spend rows.
     Returns (all_rows, null_rows).
+    
+    Args:
+        file_path (str): Path to the budget CSV file.
+        
+    Returns:
+        tuple[list[dict], list[dict]]: A tuple containing two lists: 
+            - all_rows: All loaded dataset rows.
+            - null_rows: Rows where 'actual_spend' is empty or null.
+            
+    Raises:
+        FileNotFoundError: If the dataset file is not found.
+        ColumnValidationError: If required columns are missing from the dataset.
     """
     try:
         with open(file_path, encoding="utf-8", newline="") as f:
@@ -67,6 +79,20 @@ def compute_growth(
     """
     Filter to ward+category, compute MoM or YoY growth per period.
     Returns list of result dicts with formula shown for every row.
+    
+    Args:
+        rows (list[dict]): The full dataset rows.
+        ward (str): The target ward name to filter by.
+        category (str): The target category to filter by.
+        growth_type (str): The type of growth to compute ('MoM' or 'YoY').
+        
+    Returns:
+        list[dict]: List of result dictionaries containing period, actual_spend, 
+                    growth percentage, and the formula used for calculation.
+                    
+    Raises:
+        ValueError: If an invalid growth_type is provided.
+        LookupError: If no data rows are found for the specified ward and category.
     """
     if growth_type not in ("MoM", "YoY"):
         raise ValueError(
@@ -162,6 +188,12 @@ def compute_growth(
 
 
 def main():
+    """
+    Main entry point for the budget growth analyser script.
+    
+    Parses command-line arguments, loads the dataset, computes the requested 
+    growth metrics, and writes the results to a CSV file while printing a preview.
+    """
     parser = argparse.ArgumentParser(description="UC-0C Budget Growth Analyser")
     parser.add_argument("--input",       required=True,  help="Path to ward_budget.csv")
     parser.add_argument("--ward",        required=True,  help="Ward name (exact string)")
