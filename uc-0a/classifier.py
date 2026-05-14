@@ -6,8 +6,14 @@ import csv
 
 def classify_complaint(row: dict) -> dict:
     """
-    Classify a single complaint row.
-    Returns: dict with keys: complaint_id, category, priority, reason, flag
+    Classify a single complaint row based on keywords in its description.
+    
+    Args:
+        row (dict): A dictionary representing a single complaint record.
+        
+    Returns:
+        dict: A dictionary containing the original complaint_id and newly determined 
+              category, priority, reason, and flag.
     """
     description = row.get("description", "")
     if not description:
@@ -82,7 +88,11 @@ def classify_complaint(row: dict) -> dict:
 
 def batch_classify(input_path: str, output_path: str):
     """
-    Read input CSV, classify each row, write results CSV.
+    Read input CSV, classify each row, and write results to a new CSV file.
+    
+    Args:
+        input_path (str): The file path to the input CSV containing complaints.
+        output_path (str): The file path where the classified results CSV should be saved.
     """
     results = []
     fieldnames = []
