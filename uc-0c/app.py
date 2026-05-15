@@ -18,7 +18,7 @@ class ColumnValidationError(Exception):
 class LookupError(Exception):
     pass
 
-#loads dataset
+#loads dataset from sample
 def load_dataset(file_path: str) -> tuple[list[dict], list[dict]]:
     """
     Reads ward_budget.csv, validates columns, and reports null actual_spend rows.
