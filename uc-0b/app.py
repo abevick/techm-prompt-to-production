@@ -82,7 +82,7 @@ def retrieve_policy(file_path: str) -> list[dict]:
 
     return clauses
 
-#summarize policy  details
+#summarize policy  details from structured policy  caluses 
 def summarize_policy(clauses: list[dict]) -> str:
     """
     Produce a clause-complete summary from structured policy clauses.
