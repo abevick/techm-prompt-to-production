@@ -14,7 +14,7 @@ MANDATORY_CLAUSES = ["2.3", "2.4", "2.5", "2.6", "2.7", "3.2", "3.4", "5.2", "5.
 class MissingClauseError(Exception):
     pass
 
-
+#retriev policy contents from file
 def retrieve_policy(file_path: str) -> list[dict]:
     """
     Load a .txt policy file and return a list of numbered clause dicts.
@@ -82,7 +82,7 @@ def retrieve_policy(file_path: str) -> list[dict]:
 
     return clauses
 
-
+#summarize policy  details
 def summarize_policy(clauses: list[dict]) -> str:
     """
     Produce a clause-complete summary from structured policy clauses.
