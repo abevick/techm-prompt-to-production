@@ -27,7 +27,7 @@ def classify_complaint(row: dict) -> dict:
         
     desc_lower = description.lower()
     
-    # Determine Priority
+    # Determine Priority as per severity
     severity_keywords = ["injury", "child", "school", "hospital", "ambulance", "fire", "hazard", "fell", "collapse"]
     priority = "Standard"
     found_severity_kw = None
@@ -37,7 +37,7 @@ def classify_complaint(row: dict) -> dict:
             found_severity_kw = kw
             break
             
-    # Determine Category
+    # Determine Category of mapping
     cat_mapping = {
         "Pothole": ["pothole", "crater"],
         "Flooding": ["flood", "rainwater"],
